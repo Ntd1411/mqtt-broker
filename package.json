@@ -1,13 +1,13 @@
 {
   "name": "mqtt-broker",
   "version": "1.0.0",
-  "description": "Local MQTT Broker for ESP32 communication",
+  "description": "Local Socket.IO Server for ESP32 communication",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "aedes": "^0.51.0",
-    "ws": "^8.14.2"
+    "socket.io": "^4.6.1",
+    "express": "^4.18.2"
   }
 }
