@@ -1,13 +1,13 @@
 {
-  "name": "mqtt-broker",
+  "name": "aedes-render-ws",
   "version": "1.0.0",
-  "description": "Local Socket.IO Server for ESP32 communication",
-  "main": "server.js",
+  "main": "broker.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node broker.js"
   },
   "dependencies": {
-    "socket.io": "^4.6.1",
-    "express": "^4.18.2"
+    "aedes": "^0.53.0",
+    "ws": "^8.13.0",
+    "mqtt": "^5.0.0"
   }
 }
