@@ -5,14 +5,14 @@ const ws = require('ws');
 const fs = require('fs');
 const path = require('path');
 
-// WebSocket clients cho monitoring
-const monitorClients = new Set();
+// WebSocket clients
+const webSocketClients = new Set();
 
 // ===== MQTT over TCP =====
 const mqttServer = net.createServer(aedes.handle);
 
 mqttServer.listen(process.env.MQTT_PORT, '0.0.0.0', () => {
-  console.log(`✅ MQTT Broker started on port ${process.env.MQTT_PORT}`);
+  console.log(`---MQTT Broker started on port ${process.env.MQTT_PORT}`);
 });
 
 // ===== Web Client =====
@@ -34,27 +34,37 @@ const webServer = http.createServer((req, res) => {
   }
 });
 
-// WebSocket server cho monitoring
-const monitorWs = new ws.Server({ server: webServer });
+// WebSocket server
+const webSocket = new ws.Server({ server: webServer });
 
-monitorWs.on('connection', (socket) => {
-  monitorClients.add(socket);
+webSocket.on('connection', (socket) => {
+  webSocketClients.add(socket);
   console.log('Monitor client connected');
+
+  socket.on("message", (message) => {
+    try {
+      if(message.type === "publish") {
+        
+      }
+    } catch (error) {
+      console.error("Error message socket")
+    }
+  })
   
   socket.on('close', () => {
-    monitorClients.delete(socket);
+    webSocketClients.delete(socket);
     console.log('Monitor client disconnected');
   });
 });
 
 webServer.listen(process.env.WEB_PORT, '0.0.0.0', () => {
-  console.log(`✅ Web Client started on port ${process.env.WEB_PORT}`);
+  console.log(`---Web Client started on port ${process.env.WEB_PORT}`);
 });
 
-// Broadcast to monitor clients
-function broadcastToMonitors(data) {
+// Broadcast to clients
+function broadcastToClients(data) {
   const message = JSON.stringify(data);
-  monitorClients.forEach(client => {
+  webSocketClients.forEach(client => {
     if (client.readyState === ws.OPEN) {
       client.send(message);
     }
@@ -64,7 +74,7 @@ function broadcastToMonitors(data) {
 // ===== Event logging & monitoring =====
 aedes.on('client', (client) => {
   console.log(`[CLIENT CONNECTED] ${client.id}`);
-  broadcastToMonitors({
+  broadcastToClients({
     type: 'client',
     clientId: client.id,
     timestamp: new Date().toISOString()
@@ -73,7 +83,7 @@ aedes.on('client', (client) => {
 
 aedes.on('clientDisconnect', (client) => {
   console.log(`[CLIENT DISCONNECTED] ${client.id}`);
-  broadcastToMonitors({
+  broadcastToClients({
     type: 'clientDisconnect',
     clientId: client.id,
     timestamp: new Date().toISOString()
@@ -83,7 +93,7 @@ aedes.on('clientDisconnect', (client) => {
 aedes.on('publish', (packet, client) => {
   if (client) {
     console.log(`[PUBLISH] ${client.id} -> ${packet.topic}: ${packet.payload.toString()}`);
-    broadcastToMonitors({
+    broadcastToClients({
       type: 'publish',
       clientId: client.id,
       topic: packet.topic,
@@ -96,7 +106,7 @@ aedes.on('publish', (packet, client) => {
 aedes.on('subscribe', (subscriptions, client) => {
   const topics = subscriptions.map(s => s.topic);
   console.log(`[SUBSCRIBE] ${client.id} -> ${topics.join(', ')}`);
-  broadcastToMonitors({
+  broadcastToClients({
     type: 'subscribe',
     clientId: client.id,
     topics: topics,
