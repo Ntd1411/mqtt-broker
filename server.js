@@ -5,18 +5,14 @@ const ws = require('ws');
 const fs = require('fs');
 const path = require('path');
 
-// Cấu hình ports
-const MQTT_PORT = 1883;
-const WEB_PORT = process.env.PORT || 3000;
-
 // WebSocket clients cho monitoring
 const monitorClients = new Set();
 
 // ===== MQTT over TCP =====
 const mqttServer = net.createServer(aedes.handle);
 
-mqttServer.listen(MQTT_PORT, '0.0.0.0', () => {
-  console.log(`✅ MQTT Broker started on port ${MQTT_PORT}`);
+mqttServer.listen(process.env.MQTT_PORT, '0.0.0.0', () => {
+  console.log(`✅ MQTT Broker started on port ${process.env.MQTT_PORT}`);
 });
 
 // ===== Web Client =====
@@ -51,8 +47,8 @@ monitorWs.on('connection', (socket) => {
   });
 });
 
-webServer.listen(WEB_PORT, '0.0.0.0', () => {
-  console.log(`✅ Web Client started on port ${WEB_PORT}`);
+webServer.listen(process.env.WEB_PORT, '0.0.0.0', () => {
+  console.log(`✅ Web Client started on port ${process.env.WEB_PORT}`);
 });
 
 // Broadcast to monitor clients
