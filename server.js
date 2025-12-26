@@ -92,7 +92,6 @@ aedes.on('publish', (packet, client) => {
       clientId: client.id,
       topic: packet.topic,
       payload: packet.payload.toString(),
-  monitorWs.close();
       timestamp: new Date().toISOString()
     });
   }
