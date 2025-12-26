@@ -293,7 +293,8 @@
     </div>
 
     <script>
-        const ws = new WebSocket(`ws://${window.location.hostname}:3000`);
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}`);
         
         let clients = new Set();
         let topics = new Map();
