@@ -1,13 +1,13 @@
 {
-  "name": "aedes-render-ws",
+  "name": "aedes-mqtt-broker",
   "version": "1.0.0",
-  "main": "broker.js",
+  "description": "Simple MQTT broker using Aedes",
+  "main": "server.js",
   "scripts": {
-    "start": "node broker.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "aedes": "^0.51.3",
-    "mqtt": "^5.14.1",
     "ws": "^8.18.3"
   }
 }

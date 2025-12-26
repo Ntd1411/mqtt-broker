@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: mqtt-broker
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MQTT_PORT
+        value: 1883
+      - key: WS_PORT
+        value: 8883

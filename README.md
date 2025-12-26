@@ -1,13 +1,13 @@
-# Local MQTT Broker over WebSocket
+# MQTT Broker với Aedes
 
-MQTT Broker chạy local qua WebSocket để ESP32 giao tiếp với nhau.
+MQTT Broker đơn giản sử dụng Aedes, hỗ trợ cả TCP và WebSocket, kèm giao diện web theo dõi.
 
 ## Tính năng
 
-- ✅ MQTT over WebSocket (không dùng websocket-stream)
-- 🔐 Authentication với username/password
-- 🛡️ Authorization (ACL) cho publish/subscribe
-- 📝 Logging chi tiết tất cả events
+- ✅ MQTT over TCP (port 1883)
+- ✅ MQTT over WebSocket (port 8883)
+- 📊 Web Monitor Interface (port 3000)
+- 📝 Logging tất cả events
 - 🔄 Graceful shutdown
 
 ## Cài đặt
@@ -22,32 +22,171 @@ npm install
 npm start
 ```
 
-Server sẽ chạy trên 2 ports:
-- **Port 1883**: MQTT over TCP (standard MQTT)
+Broker sẽ chạy trên:
+- **Port 1883**: MQTT over TCP
 - **Port 8883**: MQTT over WebSocket
+- **Port 3000**: Web Monitor Interface
 
-## Tài khoản mặc định
+## Web Monitor
 
-| Username | Password |
-|----------|----------|
-| alice | password123 |
-| bob | secret |
+Mở trình duyệt và truy cập: **http://localhost:3000**
 
-## Phân quyền (ACL)
-
-### User `alice`
-- ✅ Publish: tất cả topics (trừ `$SYS/*`)
-- ✅ Subscribe: tất cả topics
-
-### User `bob`
-- ✅ Publish: chỉ `bob/*`
-- ✅ Subscribe: `bob/*` và `common/*`
+Giao diện hiển thị real-time:
+- 📊 Thống kê: Số clients, topics, messages
+- 👥 Danh sách clients đang kết nối
+- 📌 Các topics đang được theo dõi
+- 📨 Messages với timestamp và payload
 
 ## Kết nối từ ESP32
 
-### Cài đặt thư viện
+### Qua WebSocket
 
-Trong PlatformIO, thêm vào `platformio.ini`:
+```cpp
+#include <WiFi.h>
+#include <PubSubClient.h>
+
+const char* ssid = "your-wifi";
+const char* password = "your-password";
+const char* mqtt_server = "192.168.1.100"; // IP của máy chạy broker
+const int mqtt_port = 8883;
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  client.setServer(mqtt_server, mqtt_port);
+  
+  while (!client.connected()) {
+    if (client.connect("ESP32Client")) {
+      Serial.println("Connected to MQTT");
+      client.subscribe("test/topic");
+    }
+  }
+}
+
+void loop() {
+  client.loop();
+  client.publish("test/topic", "Hello from ESP32");
+  delay(5000);
+}
+```
+
+## Kiểm tra
+
+Test bằng MQTT client:
+
+```bash
+# Subscribe
+mqtt sub -t 'test/#' -h localhost -p 1883
+
+# Publish  
+mqtt pub -t 'test/topic' -m 'Hello MQTT' -h localhost -p 1883
+```
+
+## Docker
+
+### Build và chạy
+
+```bash
+# Build image
+docker build -t mqtt-broker .
+
+# Chạy container
+docker run -d \
+  -p 1883:1883 \
+  -p 8883:8883 \
+  -p 3000:3000 \
+  --name mqtt-broker \
+  mqtt-broker
+```
+
+### Hoặc dùng Docker Compose
+
+```bash
+docker-compose up -d
+```
+
+## Deploy
+
+### 🚀 Deploy lên Render.com
+
+1. Push code lên GitHub
+2. Tạo tài khoản trên [Render.com](https://render.com)
+3. Tạo **New Web Service**
+4. Kết nối với GitHub repository
+5. Render sẽ tự động phát hiện `render.yaml`
+6. Deploy! 
+
+**Lưu ý:** Render cung cấp free tier với giới hạn 750 giờ/tháng.
+
+### 🚂 Deploy lên Railway.app
+
+1. Push code lên GitHub
+2. Tạo tài khoản trên [Railway.app](https://railway.app)
+3. Click **New Project** → **Deploy from GitHub**
+4. Chọn repository
+5. Railway tự động detect và deploy
+
+**Lưu ý:** Railway cung cấp $5 credit mỗi tháng cho free tier.
+
+### 🐳 Deploy lên VPS với Docker
+
+```bash
+# 1. Clone repo trên VPS
+git clone <your-repo-url>
+cd mqtt-broker
+
+# 2. Build và chạy
+docker-compose up -d
+
+# 3. Kiểm tra logs
+docker-compose logs -f
+
+# 4. Stop
+docker-compose down
+```
+
+### ☁️ Deploy lên AWS/DigitalOcean/Azure
+
+1. Tạo VM/Droplet với Ubuntu
+2. Cài Docker và Docker Compose
+3. Clone repository
+4. Chạy `docker-compose up -d`
+5. Mở ports 1883, 8883, 3000 trong firewall
+
+### 🌐 Deploy lên Fly.io
+
+```bash
+# 1. Cài Fly CLI
+curl -L https://fly.io/install.sh | sh
+
+# 2. Đăng nhập
+flyctl auth login
+
+# 3. Khởi tạo app
+flyctl launch
+
+# 4. Deploy
+flyctl deploy
+```
+
+## Môi trường biến
+
+Tạo file `.env` (xem `.env.example`):
+
+```env
+MQTT_PORT=1883
+WS_PORT=8883
+MONITOR_PORT=3000
+```
 
 ```ini
 lib_deps = 

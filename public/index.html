@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Broker Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .messages {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .messages h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clear-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: #dc2626;
+        }
+
+        .message-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .message-time {
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .message-topic {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .message-client {
+            color: #8b5cf6;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .message-payload {
+            color: #374151;
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 8px;
+            border-radius: 3px;
+            word-break: break-all;
+        }
+
+        .client-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .client-item {
+            padding: 10px;
+            background: #f3f4f6;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #374151;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .client-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .topic-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .topic-badge {
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .topic-count {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #9ca3af;
+            padding: 40px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <span class="status"></span>
+                MQTT Broker Monitor
+            </h1>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📊 Thống kê</h2>
+                <div class="stat">
+                    <span class="stat-label">Clients đang kết nối</span>
+                    <span class="stat-value" id="clientCount">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Topics đang theo dõi</span>
+                    <span class="stat-value" id="topicCount">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Tổng messages</span>
+                    <span class="stat-value" id="messageCount">0</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>👥 Clients</h2>
+                <div class="client-list" id="clientList">
+                    <div class="empty-state">Chưa có client nào kết nối</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📌 Topics</h2>
+                <div class="topic-list" id="topicList">
+                    <div class="empty-state">Chưa có topic nào</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="messages">
+            <h2>
+                📨 Messages
+                <button class="clear-btn" onclick="clearMessages()">Xóa tất cả</button>
+            </h2>
+            <div class="message-list" id="messageList">
+                <div class="empty-state">Chưa có message nào</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket(`ws://${window.location.hostname}:3000`);
+        
+        let clients = new Set();
+        let topics = new Map();
+        let messageCount = 0;
+
+        ws.onopen = () => {
+            console.log('Connected to monitor WebSocket');
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            switch(data.type) {
+                case 'client':
+                    clients.add(data.clientId);
+                    updateClients();
+                    break;
+                    
+                case 'clientDisconnect':
+                    clients.delete(data.clientId);
+                    updateClients();
+                    break;
+                    
+                case 'publish':
+                    addMessage(data);
+                    updateTopics(data.topic);
+                    break;
+                    
+                case 'subscribe':
+                    data.topics.forEach(topic => updateTopics(topic));
+                    break;
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+
+        ws.onclose = () => {
+            console.log('Disconnected from monitor');
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        };
+
+        function updateClients() {
+            const clientList = document.getElementById('clientList');
+            const clientCount = document.getElementById('clientCount');
+            
+            clientCount.textContent = clients.size;
+            
+            if (clients.size === 0) {
+                clientList.innerHTML = '<div class="empty-state">Chưa có client nào kết nối</div>';
+            } else {
+                clientList.innerHTML = Array.from(clients).map(id => `
+                    <div class="client-item">
+                        <span>${id}</span>
+                        <span class="client-status"></span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function updateTopics(topic) {
+            topics.set(topic, (topics.get(topic) || 0) + 1);
+            
+            const topicList = document.getElementById('topicList');
+            const topicCount = document.getElementById('topicCount');
+            
+            topicCount.textContent = topics.size;
+            
+            topicList.innerHTML = Array.from(topics.entries())
+                .sort((a, b) => b[1] - a[1])
+                .map(([topic, count]) => `
+                    <div class="topic-badge">
+                        ${topic}
+                        <span class="topic-count">${count}</span>
+                    </div>
+                `).join('');
+        }
+
+        function addMessage(data) {
+            messageCount++;
+            document.getElementById('messageCount').textContent = messageCount;
+            
+            const messageList = document.getElementById('messageList');
+            
+            if (messageCount === 1) {
+                messageList.innerHTML = '';
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `
+                <div class="message-time">${new Date(data.timestamp).toLocaleString('vi-VN')}</div>
+                <div class="message-topic">Topic: ${data.topic}</div>
+                <div class="message-client">Client: ${data.clientId}</div>
+                <div class="message-payload">${data.payload}</div>
+            `;
+            
+            messageList.insertBefore(messageDiv, messageList.firstChild);
+            
+            // Giới hạn 100 messages
+            if (messageList.children.length > 100) {
+                messageList.removeChild(messageList.lastChild);
+            }
+        }
+
+        function clearMessages() {
+            document.getElementById('messageList').innerHTML = '<div class="empty-state">Chưa có message nào</div>';
+            messageCount = 0;
+            document.getElementById('messageCount').textContent = 0;
+        }
+    </script>
+</body>
+</html>
