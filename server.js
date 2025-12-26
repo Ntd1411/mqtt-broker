@@ -6,7 +6,7 @@ const path = require('path');
 
 // Cấu hình ports
 const MQTT_PORT = 1883;
-const WEB_PORT = process.env.PORT || 3000;
+const WEB_PORT = 3000;
 
 // ===== MQTT over TCP =====
 const mqttServer = net.createServer(aedes.handle);
