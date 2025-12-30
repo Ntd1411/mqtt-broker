@@ -321,19 +321,21 @@
         }
 
         .message {
-            padding: 16px;
-            margin-bottom: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
             background: #fafafa;
-            border-left: 5px solid #000000;
+            border: 2px solid #e5e5e5;
             border-radius: 8px;
-            animation: slideIn 0.4s ease-out;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
 
         .message:hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-            transform: translateX(5px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            border-color: #cccccc;
         }
 
         @keyframes slideIn {
@@ -357,10 +359,14 @@
         }
 
         .message-topic {
-            color: #000000;
+            color: #ffffff;
+            background: #000000;
             font-weight: 700;
-            margin-bottom: 6px;
-            font-size: 15px;
+            font-size: 13px;
+            padding: 4px 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .message-client {
@@ -368,18 +374,21 @@
             font-size: 13px;
             margin-bottom: 8px;
             font-weight: 500;
+            display: none;
         }
 
         .message-payload {
             color: #1f2937;
             font-family: 'Consolas', 'Courier New', monospace;
             background: #ffffff;
-            padding: 12px;
-            border-radius: 6px;
-            word-break: break-all;
-            border: 1px solid #e5e7eb;
+            padding: 4px 8px;
+            border-radius: 4px;
             font-size: 13px;
             line-height: 1.6;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .client-list {
@@ -828,10 +837,8 @@
             
             messageList.innerHTML = filteredMessages.map(data => `
                 <div class="message">
-                    <div class="message-time">${new Date(data.timestamp).toLocaleString('vi-VN')}</div>
-                    <div class="message-topic">Topic: ${data.topic}</div>
-                    <div class="message-client">Client: ${data.clientId}</div>
-                    <div class="message-payload">${escapeHtml(data.payload)}</div>
+                    <span class="message-topic">${data.topic}</span>
+                    <span class="message-payload">${escapeHtml(data.payload)}</span>
                 </div>
             `).join('');
         }
