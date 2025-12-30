@@ -45,11 +45,24 @@ webSocket.on('connection', (socket) => {
 
   socket.on("message", (message) => {
     try {
-      if(message.type === "publish") {
-        
+      const data = JSON.parse(message);
+      if(data.type === "publish") {
+        // Publish message to MQTT broker
+        aedes.publish({
+          topic: data.topic,
+          payload: Buffer.from(data.payload),
+          qos: 0,
+          retain: false
+        }, (err) => {
+          if (err) {
+            console.error('Publish error:', err);
+          } else {
+            console.log(`[WEB PUBLISH] ${data.topic}: ${data.payload}`);
+          }
+        });
       }
     } catch (error) {
-      console.error("Error message socket")
+      console.error("Error parsing message:", error);
     }
   })
   

@@ -26,10 +26,10 @@
 
         header {
             background: white;
-            padding: 25px 35px;
-            border-radius: 15px;
+            padding: 15px 25px;
+            border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .header-content {
@@ -37,30 +37,30 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 15px;
         }
 
         h1 {
             color: #000000;
-            font-size: 32px;
+            font-size: 22px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             font-weight: 700;
         }
 
         .logo {
-            font-size: 36px;
+            font-size: 24px;
         }
 
         .status {
             display: inline-block;
-            width: 14px;
-            height: 14px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: #000000;
             animation: pulse 2s infinite;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
         }
 
         .status.disconnected {
@@ -75,7 +75,7 @@
 
         .header-info {
             display: flex;
-            gap: 20px;
+            gap: 12px;
             align-items: center;
         }
 
@@ -83,21 +83,21 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 8px 16px;
+            padding: 6px 12px;
             background: #000000;
-            border-radius: 10px;
+            border-radius: 8px;
             color: white;
         }
 
         .info-label {
-            font-size: 11px;
+            font-size: 10px;
             opacity: 0.9;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .info-value {
-            font-size: 18px;
+            font-size: 14px;
             font-weight: bold;
             margin-top: 2px;
         }
@@ -518,6 +518,104 @@
             font-size: 15px;
         }
 
+        .publish-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 2px solid #e5e5e5;
+        }
+
+        .publish-form.hidden {
+            display: none;
+        }
+
+        .publish-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e5e5e5;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .publish-input:focus {
+            outline: none;
+            border-color: #000000;
+        }
+
+        .publish-input::placeholder {
+            color: #999999;
+        }
+
+        .publish-btn {
+            background: #000000;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .publish-btn:hover {
+            background: #333333;
+            transform: translateY(-2px);
+        }
+
+        .publish-btn:active {
+            transform: translateY(0);
+        }
+
+        .test-btn {
+            background: #666666;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
+        }
+
+        .test-btn:hover {
+            background: #555555;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-form-btn {
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid #000000;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .toggle-form-btn:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .toggle-form-btn.active {
+            background: #000000;
+            color: #ffffff;
+        }
+
         .chart-container {
             height: 200px;
             margin-top: 15px;
@@ -610,10 +708,17 @@
                 <h2>
                     <span><i class="fas fa-envelope card-icon"></i>Messages</span>
                     <div class="btn-group">
+                        <button class="test-btn" onclick="sendTestMessage()"><i class="fas fa-vial"></i> Test</button>
+                        <button class="toggle-form-btn" id="toggleFormBtn" onclick="togglePublishForm()"><i class="fas fa-edit"></i> Tùy chỉnh</button>
                         <button class="pause-btn" id="pauseBtn" onclick="togglePause()"><i class="fas fa-pause"></i> Tạm dừng</button>
-                        <button class="clear-btn" onclick="clearMessages()"><i class="fas fa-trash-alt"></i> Xóa tất cả</button>
+                        <button class="clear-btn" onclick="clearMessages()"><i class="fas fa-trash-alt"></i> Xóa</button>
                     </div>
                 </h2>
+                <div class="publish-form hidden" id="publishForm">
+                    <input type="text" class="publish-input" id="topicInput" placeholder="Topic (ví dụ: sensor/temp)" />
+                    <input type="text" class="publish-input" id="payloadInput" placeholder="Message (ví dụ: 25.5)" />
+                    <button class="publish-btn" onclick="publishMessage()"><i class="fas fa-paper-plane"></i> Gửi</button>
+                </div>
                 <div class="filter-controls">
                     <button class="filter-btn active" onclick="filterMessages('all')">Tất cả</button>
                     <button class="filter-btn" onclick="filterMessages('today')">Hôm nay</button>
@@ -906,6 +1011,77 @@
             
             renderMessages(filterType, searchTerm);
         }
+
+        function publishMessage() {
+            const topic = document.getElementById('topicInput').value.trim();
+            const payload = document.getElementById('payloadInput').value.trim();
+            
+            if (!topic) {
+                alert('Vui lòng nhập topic!');
+                return;
+            }
+            
+            if (!payload) {
+                alert('Vui lòng nhập message!');
+                return;
+            }
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'publish',
+                    topic: topic,
+                    payload: payload
+                }));
+                
+                // Clear inputs
+                document.getElementById('topicInput').value = '';
+                document.getElementById('payloadInput').value = '';
+            } else {
+                alert('Không thể kết nối đến broker!');
+            }
+        }
+
+        function sendTestMessage() {
+            const timestamp = new Date().toLocaleString('vi-VN');
+            const testMessage = {
+                type: 'publish',
+                topic: 'test/message',
+                payload: `Test message at ${timestamp}`
+            };
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(testMessage));
+            } else {
+                alert('Không thể kết nối đến broker!');
+            }
+        }
+
+        function togglePublishForm() {
+            const form = document.getElementById('publishForm');
+            const btn = document.getElementById('toggleFormBtn');
+            
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="fas fa-times"></i> Ẩn';
+            } else {
+                form.classList.add('hidden');
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="fas fa-edit"></i> Tùy chỉnh';
+            }
+        }
+
+        // Allow Enter key to submit
+        document.addEventListener('DOMContentLoaded', () => {
+            const payloadInput = document.getElementById('payloadInput');
+            if (payloadInput) {
+                payloadInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        publishMessage();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
