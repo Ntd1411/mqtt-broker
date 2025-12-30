@@ -510,6 +510,14 @@
         .topic-badge:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+
+        .topic-badge.active {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
         }
 
         .topic-count {
@@ -716,8 +724,12 @@
 
             <div class="card card-row-span">
                 <h2>
-                    <span><i class="fas fa-envelope card-icon"></i>Messages</span>
+                    <span>
+                        <i class="fas fa-envelope card-icon"></i>Messages
+                        <span id="topicFilterLabel" style="font-size: 12px; color: #6b7280; margin-left: 8px;"></span>
+                    </span>
                     <div class="btn-group">
+                        <button class="test-btn" id="clearFilterBtn" onclick="clearTopicFilter()" title="Xóa bộ lọc topic" style="display: none;"><i class="fas fa-filter-circle-xmark"></i> Bỏ lọc</button>
                         <button class="test-btn" onclick="sendTestMessage()"><i class="fas fa-vial"></i> Test</button>
                         <button class="toggle-form-btn" id="toggleFormBtn" onclick="togglePublishForm()"><i class="fas fa-edit"></i> Tùy chỉnh</button>
                         <button class="pause-btn" id="pauseBtn" onclick="togglePause()"><i class="fas fa-pause"></i> Tạm dừng</button>
@@ -798,6 +810,7 @@
         let allMessages = [];
         let isPaused = false;
         let startTime = Date.now();
+        let currentTopicFilter = null;
         let messageRateCounter = 0;
 
         function connectWebSocket() {
@@ -902,7 +915,7 @@
             topicList.innerHTML = Array.from(topics.entries())
                 .sort((a, b) => b[1] - a[1])
                 .map(([topic, count]) => `
-                    <div class="topic-badge">
+                    <div class="topic-badge ${currentTopicFilter === topic ? 'active' : ''}" onclick="filterByTopic('${topic}')">
                         ${topic}
                         <span class="topic-count">${count}</span>
                     </div>
@@ -935,14 +948,19 @@
             
             let filteredMessages = allMessages;
             
+            // Filter by topic first if selected
+            if (currentTopicFilter) {
+                filteredMessages = filteredMessages.filter(msg => msg.topic === currentTopicFilter);
+            }
+            
             if (filter === 'today') {
                 const today = new Date().toDateString();
-                filteredMessages = allMessages.filter(msg => 
+                filteredMessages = filteredMessages.filter(msg => 
                     new Date(msg.timestamp).toDateString() === today
                 );
             } else if (filter === 'hour') {
                 const oneHourAgo = Date.now() - 3600000;
-                filteredMessages = allMessages.filter(msg => 
+                filteredMessages = filteredMessages.filter(msg => 
                     new Date(msg.timestamp).getTime() > oneHourAgo
                 );
             }
@@ -978,14 +996,61 @@
             return text.replace(/[&<>"']/g, m => map[m]);
         }
 
+        function filterByTopic(topic) {
+            if (currentTopicFilter === topic) {
+                // Click same topic again to clear filter
+                currentTopicFilter = null;
+                document.getElementById('clearFilterBtn').style.display = 'none';
+                document.getElementById('topicFilterLabel').textContent = '';
+            } else {
+                currentTopicFilter = topic;
+                document.getElementById('clearFilterBtn').style.display = 'inline-block';
+                document.getElementById('topicFilterLabel').textContent = `(lọc: ${topic})`;
+            }
+            // Re-render topics with active state
+            const topicList = document.getElementById('topicList');
+            topicList.innerHTML = Array.from(topics.entries())
+                .sort((a, b) => b[1] - a[1])
+                .map(([t, count]) => `
+                    <div class="topic-badge ${currentTopicFilter === t ? 'active' : ''}" onclick="filterByTopic('${t}')">
+                        ${t}
+                        <span class="topic-count">${count}</span>
+                    </div>
+                `).join('');
+            renderMessages();
+        }
+
+        function clearTopicFilter() {
+            currentTopicFilter = null;
+            document.getElementById('clearFilterBtn').style.display = 'none';
+            document.getElementById('topicFilterLabel').textContent = '';
+            // Re-render topics to remove active state
+            const topicList = document.getElementById('topicList');
+            topicList.innerHTML = Array.from(topics.entries())
+                .sort((a, b) => b[1] - a[1])
+                .map(([topic, count]) => `
+                    <div class="topic-badge" onclick="filterByTopic('${topic}')">
+                        ${topic}
+                        <span class="topic-count">${count}</span>
+                    </div>
+                `).join('');
+            renderMessages();
+        }
+
         function clearMessages() {
             if (confirm('Bạn có chắc muốn xóa tất cả messages?')) {
                 allMessages = [];
                 messageCount = 0;
                 todayCount = 0;
+                topics.clear();
+                currentTopicFilter = null;
                 document.getElementById('messageCount').textContent = 0;
                 document.getElementById('todayCount').textContent = 0;
+                document.getElementById('topicCount').textContent = 0;
                 document.getElementById('messageList').innerHTML = '<div class="empty-state">Chưa có message nào</div>';
+                document.getElementById('topicList').innerHTML = '<div class="empty-state">Chưa có topic nào</div>';
+                document.getElementById('clearFilterBtn').style.display = 'none';
+                document.getElementById('topicFilterLabel').textContent = '';
             }
         }
 
