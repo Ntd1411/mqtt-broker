@@ -58,6 +58,14 @@ webSocket.on('connection', (socket) => {
             console.error('Publish error:', err);
           } else {
             console.log(`[WEB PUBLISH] ${data.topic}: ${data.payload}`);
+            // Broadcast to all web clients
+            broadcastToClients({
+              type: 'publish',
+              clientId: 'Web Client',
+              topic: data.topic,
+              payload: data.payload,
+              timestamp: new Date().toISOString()
+            });
           }
         });
       }
