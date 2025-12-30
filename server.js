@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const aedes = require('aedes')();
 const net = require('net');
 const http = require('http');
